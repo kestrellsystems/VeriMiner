@@ -117,6 +117,7 @@ namespace VeriMiner
             do
             {
                 float r = n / Difficulty;
+
                 result[index] = (byte)r;
                 float x = n - r * Difficulty;
 
@@ -127,7 +128,7 @@ namespace VeriMiner
             } 
             while (true);
 
-            Array.Reverse((Array)result);
+            //Array.Reverse((Array)result);
 
             string Target = ByteArrayToHexString(result);
 

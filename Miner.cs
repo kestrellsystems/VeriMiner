@@ -93,9 +93,10 @@ namespace VeriMiner
                     Databyte[78] = (byte)(Nonce >> 16);
                     Databyte[79] = (byte)(Nonce >> 24);
 
-                    ScryptResult = CryptSharp.Utility.SCrypt.ComputeDerivedKey(Databyte, Databyte, 1048576, 1, 1, null, 32);
+                    ScryptResult = CryptSharp.Utility.SCrypt.ComputeDerivedKey(Databyte, Databyte, 32);
 
                     Hashcount++;
+                    Console.WriteLine("result: {0} \n target: {1}", Utilities.ByteArrayToHexString(ScryptResult), Utilities.ByteArrayToHexString(Target));
                     if (meetsTarget(ScryptResult, Target))  // Did we meet the target?
                     {
                         if (!done) 

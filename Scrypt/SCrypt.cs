@@ -62,13 +62,9 @@ namespace CryptSharp.Utility
         /// </param>
         /// <param name="derivedKeyLength">The desired length of the derived key.</param>
         /// <returns>The derived key.</returns>
-        public static byte[] ComputeDerivedKey(byte[] key, byte[] salt,
-                                               int cost, int blockSize, int parallel, int? maxThreads,
-                                               int derivedKeyLength)
+        public static byte[] ComputeDerivedKey(byte[] key, byte[] salt,int derivedKeyLength)
         {
-            Check.Range("derivedKeyLength", derivedKeyLength, 0, int.MaxValue);
-
-            using Pbkdf2 kdf = GetStream(key, salt, cost, blockSize, parallel, maxThreads);
+            using Pbkdf2 kdf = GetStream(key, salt);
             return kdf.Read(derivedKeyLength);
         }
 
@@ -99,11 +95,9 @@ namespace CryptSharp.Utility
         ///     <c>null</c> will use as many threads as possible.
         /// </param>
         /// <returns>The effective salt.</returns>
-        public static byte[] GetEffectivePbkdf2Salt(byte[] key, byte[] salt,
-                                                    int cost, int blockSize, int parallel, int? maxThreads)
+        public static byte[] GetEffectivePbkdf2Salt(byte[] key, byte[] salt)
         {
-            Check.Null("key", key); Check.Null("salt", salt);
-            return MFcrypt(key, salt, cost, blockSize, parallel, maxThreads);
+            return MFcrypt(key, salt);
         }
 
         /// <summary>
@@ -132,39 +126,27 @@ namespace CryptSharp.Utility
         ///     <c>null</c> will use as many threads as possible.
         /// </param>
         /// <returns>The derived key stream.</returns>
-        public static Pbkdf2 GetStream(byte[] key, byte[] salt,
-                                       int cost, int blockSize, int parallel, int? maxThreads)
+        public static Pbkdf2 GetStream(byte[] key, byte[] salt)
         {
-            byte[] B = GetEffectivePbkdf2Salt(key, salt, cost, blockSize, parallel, maxThreads);
+            byte[] B = GetEffectivePbkdf2Salt(key, salt);
             Pbkdf2 kdf = new(new HMACSHA256(key), B, 1);
             Security.Clear(B); return kdf;
         }
 
-        static byte[] MFcrypt(byte[] P, byte[] S,
-                              int cost, int blockSize, int parallel, int? maxThreads)
+        static byte[] MFcrypt(byte[] P, byte[] S)
         {
-            int MFLen = blockSize * 128;
-            if (maxThreads == null) { maxThreads = int.MaxValue; }
-
-            if (!BitMath.IsPositivePowerOf2(cost))
-                { throw Exceptions.ArgumentOutOfRange("cost", "Cost must be a positive power of 2."); }
-            Check.Range("blockSize", blockSize, 1, int.MaxValue / 128);
-            Check.Range("parallel", parallel, 1, int.MaxValue / MFLen);
-            Check.Range("maxThreads", (int)maxThreads, 1, int.MaxValue);
-
-            byte[] B = Pbkdf2.ComputeDerivedKey(new HMACSHA256(P), S, 1, parallel * MFLen);
+            byte[] B = Pbkdf2.ComputeDerivedKey(new HMACSHA256(P), S, 1, 128);
 
             uint[] B0 = new uint[B.Length / 4];
             for (int i = 0; i < B0.Length; i++) { B0[i] = BitPacking.UInt32FromLEBytes(B, i * 4); } // code is easier with uint[]
-            ThreadSMixCalls(B0, MFLen, cost, blockSize, parallel, (int)maxThreads);
+            ThreadSMixCalls(B0);
             for (int i = 0; i < B0.Length; i++) { BitPacking.LEBytesFromUInt32(B0[i], B, i * 4); }
             Security.Clear(B0);
 
             return B;
         }
 
-        static void ThreadSMixCalls(uint[] B0, int MFLen,
-                                    int cost, int blockSize, int parallel, int maxThreads)
+        static void ThreadSMixCalls(uint[] B0)
         {
             int current = 0;
             void workerThread()
@@ -172,42 +154,41 @@ namespace CryptSharp.Utility
                 while (true)
                 {
                     int j = Interlocked.Increment(ref current) - 1;
-                    if (j >= parallel) { break; }
-
-                    SMix(B0, j * MFLen / 4, B0, j * MFLen / 4, (uint)cost, blockSize);
+                    if (j >= 1) { break; }
+                    SMix(B0, j * 32, B0, j * 32);
                 }
             }
 
-            int threadCount = Math.Max(1, Math.Min(Environment.ProcessorCount, Math.Min(maxThreads, parallel)));
+            int threadCount = Math.Max(1, Math.Min(Environment.ProcessorCount, Math.Min(1, 1)));
             Thread[] threads = new Thread[threadCount - 1];
             for (int i = 0; i < threads.Length; i++) { (threads[i] = new Thread(workerThread, 8192)).Start(); }
             workerThread();
             for (int i = 0; i < threads.Length; i++) { threads[i].Join(); }
         }
 
-        static void SMix(uint[] B, int Boffset, uint[] Bp, int Bpoffset, uint N, int r)
+        static void SMix(uint[] B, int Boffset, uint[] Bp, int Bpoffset)
         {
-            uint Nmask = N - 1; int Bs = 16 * 2 * r;
+            uint Nmask = 1048576 - 1;
             uint[] scratch1 = new uint[16];
-            uint[] scratchX = new uint[16], scratchY = new uint[Bs];
-            uint[] scratchZ = new uint[Bs];
+            uint[] scratchX = new uint[16], scratchY = new uint[32];
+            uint[] scratchZ = new uint[32];
 
-            uint[] x = new uint[Bs]; uint[][] v = new uint[N][];
-            for (int i = 0; i < v.Length; i++) { v[i] = new uint[Bs]; }
+            uint[] x = new uint[32]; uint[][] v = new uint[1048576][];
+            for (int i = 0; i < v.Length; i++) { v[i] = new uint[32]; }
 
-            Array.Copy(B, Boffset, x, 0, Bs);
-            for (uint i = 0; i < N; i++)
+            Array.Copy(B, Boffset, x, 0, 32);
+            for (uint i = 0; i < 1048576; i++)
             {
-                Array.Copy(x, v[i], Bs);
-                BlockMix(x, 0, x, 0, scratchX, scratchY, scratch1, r); 
+                Array.Copy(x, v[i], 32);
+                BlockMix(x, 0, x, 0, scratchX, scratchY, scratch1); 
             }
-            for (uint i = 0; i < N; i++)
+            for (uint i = 0; i < 1048576; i++)
             {
-                uint j = x[Bs - 16] & Nmask; uint[] vj = v[j];
+                uint j = x[16] & Nmask; uint[] vj = v[j];
                 for (int k = 0; k < scratchZ.Length; k++) { scratchZ[k] = x[k] ^ vj[k]; }
-                BlockMix(scratchZ, 0, x, 0, scratchX, scratchY, scratch1, r);
+                BlockMix(scratchZ, 0, x, 0, scratchX, scratchY, scratch1);
             }
-            Array.Copy(x, 0, Bp, Bpoffset, Bs);
+            Array.Copy(x, 0, Bp, Bpoffset, 32);
 
             for (int i = 0; i < v.Length; i++) { Security.Clear(v[i]); }
             Security.Clear(v); Security.Clear(x);
@@ -222,14 +203,12 @@ namespace CryptSharp.Utility
              int    Bpoffset,
              uint[] x,        // 16
              uint[] y,        // 16*2*r -- unnecessary but it allows us to alias B and Bp
-             uint[] scratch,  // 16
-             int r)
+             uint[] scratch) //16
         {
-            //we know r is derived from BlockSize so we hardcode it as 1 and pre-compute.
-            int k = Boffset, m = 0, n = 16 * r;
-            Array.Copy(B, (2 * r - 1) * 16, x, 0, 16);
+            int k = Boffset, m = 0;
+            Array.Copy(B, 16, x, 0, 16);
 
-            for (int i = 0; i < r; i++)
+            for (int i = 0; i < 1; i++)
             {
                 for (int j = 0; j < scratch.Length; j++) { scratch[j] = x[j] ^ B[j + k]; }
                 Salsa20Core.Compute(8, scratch, 0, x, 0);
@@ -238,7 +217,7 @@ namespace CryptSharp.Utility
 
                 for (int j = 0; j < scratch.Length; j++) { scratch[j] = x[j] ^ B[j + k]; }
                 Salsa20Core.Compute(8, scratch, 0, x, 0);
-                Array.Copy(x, 0, y, m + n, 16);
+                Array.Copy(x, 0, y, 16, 16);
                 k += 16;
 
                 m += 16;

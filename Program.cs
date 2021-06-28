@@ -160,7 +160,7 @@ namespace VeriMiner
             StratumCommand Command = (StratumCommand)e.MiningEventArg;
             CurrentDifficulty = Convert.ToSingle(Command.parameters[0]);
 
-            Console.WriteLine("Got Set_Difficulty " + CurrentDifficulty);
+            Console.WriteLine("Got Set_Difficulty: {0}", CurrentDifficulty);
         }
 
         private static void Stratum_GotNotify(object sender, StratumEventArgs e)
