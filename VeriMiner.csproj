@@ -9,8 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
-    <PackageReference Include="Replicon.Cryptography.SCrypt" Version="1.1.6.13" />
-    <PackageReference Include="System.Security.Permissions" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

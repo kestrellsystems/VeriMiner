@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Runtime.Intrinsics.X86;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,7 +25,6 @@ namespace VeriMiner
             for (int index = 0; index < HexAsBytes.Length; index++)
             {
                 string byteValue = hexString.Substring(index * 2, 2);
-                //HexAsBytes[index] = Convert.ToByte(byteValue);
                 HexAsBytes[index] = byte.Parse(byteValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             }
 
@@ -162,15 +162,22 @@ namespace VeriMiner
         /// <returns>deserialized object</returns>        
         public static T JsonDeserialize<T>(string json)
         {
-            T result = default(T);
 
             // Load json into memorystream and deserialize            
             MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
             DataContractJsonSerializer s = new DataContractJsonSerializer(typeof(T));
-            result = (T)s.ReadObject(ms);
+            T result = (T)s.ReadObject(ms);
             ms.Close();
             return result;
+        }
+
+        public static void DetermineIntrinsicSupport()
+        {
+            Console.WriteLine("=== Intrinsic Support ===");
+            Console.WriteLine("AES: {0} AVX: {1} AVX2: {2}", System.Runtime.Intrinsics.X86.Aes.IsSupported, Avx.IsSupported, Avx2.IsSupported);
+            Console.WriteLine("SSE: {0} SSE2: {1} SSE3: {2} SSE41: {3} SSE42: {4} SSSE3: {5} \n", 
+                Sse.IsSupported, Sse2.IsSupported, Sse3.IsSupported, Sse41.IsSupported, Sse42.IsSupported,Ssse3.IsSupported);
         }
     }
 }

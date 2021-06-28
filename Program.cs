@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.Intrinsics.X86;
 using System.Threading;
 
 namespace VeriMiner
@@ -40,18 +39,7 @@ namespace VeriMiner
                 Console.WriteLine("VeriMiner {0}" , typeof(Program).Assembly.GetName().Version);
 
                 //Print intrinsics support
-                Console.WriteLine("=== Intrinsic Support ===");
-                Console.WriteLine("AES: {0} AVX: {1} AVX2: {2}",Aes.X64.IsSupported,Avx.X64.IsSupported,Avx2.X64.IsSupported);
-                Console.WriteLine("SSE: {0} SSE2: {1} SSE3: {2} SSE41: {3} SSE42: {4}",Sse.X64.IsSupported,Sse2.X64.IsSupported,Sse3.X64.IsSupported,Sse41.X64.IsSupported,Sse42.X64.IsSupported);
-
-                //Print OS info
-                Console.WriteLine("=== OS Info ===");
-                Console.WriteLine("64-bit: {0}",Environment.Is64BitOperatingSystem);
-                Console.WriteLine("OS: {0}",Environment.OSVersion);
-
-                //Print Processor info
-                Console.WriteLine("=== Threads Info ===");
-                Console.WriteLine("Threads: {0}",threads.Value());
+                Utilities.DetermineIntrinsicSupport();
 
                 if (!url.HasValue() || !user.HasValue() || !password.HasValue())
                     Console.Error.WriteLine("you are missing a critical option! -> URL: {0} Username: {1} Password: {2}",url.HasValue(),user.HasValue(),password.HasValue());

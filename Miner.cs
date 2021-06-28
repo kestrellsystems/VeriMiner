@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace VeriMiner
 {
@@ -27,7 +28,7 @@ namespace VeriMiner
        
         public void Mine(object sender, DoWorkEventArgs e)
         {
-            Console.WriteLine("New Miner. ID = " + Thread.CurrentThread.ManagedThreadId);
+            Debug.WriteLine("New Miner. ID = " + Thread.CurrentThread.ManagedThreadId);
             Console.WriteLine("Starting {0} threads for new block...", threads.Length);
 
             Program.Job ThisJob = (Program.Job)e.Argument;
@@ -42,9 +43,11 @@ namespace VeriMiner
             // Spin up background threads to do the hashing
             for (int i = 0; i < threads.Length; i++)
             {
-                threads[i] = new Thread(() => doScrypt(databyte, targetbyte, (uint)i, (uint)threads.Length));
-                threads[i].IsBackground = false;
-                threads[i].Priority = ThreadPriority.Normal;//.Lowest; // For debugging
+                threads[i] = new Thread(() => doScrypt(databyte, targetbyte, (uint)i, (uint)threads.Length))
+                {
+                    IsBackground = false,
+                    Priority = ThreadPriority.Normal//.Lowest; // For debugging
+                };
                 threads[i].Start();
             }
 
@@ -90,7 +93,7 @@ namespace VeriMiner
                     Databyte[78] = (byte)(Nonce >> 16);
                     Databyte[79] = (byte)(Nonce >> 24);
 
-                    ScryptResult = Replicon.Cryptography.SCrypt.SCrypt.DeriveKey(Databyte, Databyte, 1048576, 1, 1, 32);
+                    ScryptResult = CryptSharp.Utility.SCrypt.ComputeDerivedKey(Databyte, Databyte, 1048576, 1, 1, null, 32);
 
                     Hashcount++;
                     if (meetsTarget(ScryptResult, Target))  // Did we meet the target?
