@@ -92,7 +92,7 @@ namespace VeriMiner
 
             // Calculate MerkleRoot and Target
             string MerkleRoot = Utilities.GenerateMerkleRoot(ThisJob.Coinb1, ThisJob.Coinb2, stratum.ExtraNonce1, stratum.ExtraNonce2.ToString("x8"), ThisJob.MerkleNumbers);
-            string Target = Utilities.GenerateTarget(CurrentDifficulty);
+            string Target = Utilities.GenerateTarget(65535.0 / CurrentDifficulty);
 
             // Update the inputs on this job
             ThisJob.Target = Target;
@@ -194,6 +194,8 @@ namespace VeriMiner
             }
 
             // Add the new job to the queue
+            Console.WriteLine("Got new Job: {0}", ThisJob.JobID, Console.ForegroundColor = ConsoleColor.Green);
+            Console.ResetColor();
             IncomingJobs.Enqueue(ThisJob);
         }
 

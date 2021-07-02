@@ -62,7 +62,7 @@ namespace CryptSharp.Utility
         /// </param>
         /// <param name="derivedKeyLength">The desired length of the derived key.</param>
         /// <returns>The derived key.</returns>
-        public static byte[] ComputeDerivedKey(byte[] key, byte[] salt,int derivedKeyLength)
+        public static byte[] ComputeDerivedKey(byte[] key, byte[] salt, int derivedKeyLength)
         {
             using Pbkdf2 kdf = GetStream(key, salt);
             return kdf.Read(derivedKeyLength);
@@ -180,7 +180,7 @@ namespace CryptSharp.Utility
             for (uint i = 0; i < 1048576; i++)
             {
                 Array.Copy(x, v[i], 32);
-                BlockMix(x, 0, x, 0, scratchX, scratchY, scratch1); 
+                BlockMix(x, 0, x, 0, scratchX, scratchY, scratch1);
             }
             for (uint i = 0; i < 1048576; i++)
             {
@@ -198,9 +198,9 @@ namespace CryptSharp.Utility
 
         static void BlockMix
             (uint[] B,        // 16*2*r
-             int    Boffset,
+             int Boffset,
              uint[] Bp,       // 16*2*r
-             int    Bpoffset,
+             int Bpoffset,
              uint[] x,        // 16
              uint[] y,        // 16*2*r -- unnecessary but it allows us to alias B and Bp
              uint[] scratch) //16

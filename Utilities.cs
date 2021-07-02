@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.Intrinsics.X86;
@@ -98,34 +99,34 @@ namespace VeriMiner
                 hashValue = mySHA256.ComputeHash(HexStringToByteArray(ByteArrayToHexString(hashValue2) + s));
                 hashValue2 = mySHA256.ComputeHash(hashValue);
             }
-
+            
             string MerkleRoot = ByteArrayToHexString(ReverseByteArrayByFours(hashValue2));
 
             return MerkleRoot;
         }
 
-        public static string GenerateTarget(float Difficulty)
+        public static string GenerateTarget(double Difficulty)
         {
             // Calculate Target (which is the reverse of 0x 0000ffff 00000000 00000000 00000000 00000000 00000000 00000000 00000000 / difficulty
-            byte[] ba = { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            byte[] ba = { 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
             int index = 0;
-            //int d = Difficulty;
+            double d = Difficulty;
             int n = ba[0];
-            byte[] result = new byte[ba.Length];
+            byte[] result = new byte[32];
 
             do
             {
-                float r = n / Difficulty;
-
+                int r = (int)(n / d);
                 result[index] = (byte)r;
-                float x = n - r * Difficulty;
+                int x = (int)(n - r * d);
 
                 if (++index == ba.Length)
                     break;
 
-                n = ((int)x << 8) + ba[index];
-            } 
+                n = (x << 8) + ba[index];
+            }
             while (true);
 
             //Array.Reverse((Array)result);
