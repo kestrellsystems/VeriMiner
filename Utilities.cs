@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.Intrinsics.X86;
@@ -131,9 +130,7 @@ namespace VeriMiner
 
             //Array.Reverse((Array)result);
 
-            string Target = ByteArrayToHexString(result);
-
-            return Target;
+            return ByteArrayToHexString(result);
         }
 
         /// <summary>        

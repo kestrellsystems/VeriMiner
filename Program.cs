@@ -17,7 +17,7 @@ namespace VeriMiner
         private static Miner miner;
         private static Stratum stratum;
 
-        private static float CurrentDifficulty;
+        private static double CurrentDifficulty;
         private static Queue<Job> IncomingJobs = new();
         private static BackgroundWorker worker;
         private static int SharesSubmitted = 0;
@@ -92,7 +92,7 @@ namespace VeriMiner
 
             // Calculate MerkleRoot and Target
             string MerkleRoot = Utilities.GenerateMerkleRoot(ThisJob.Coinb1, ThisJob.Coinb2, stratum.ExtraNonce1, stratum.ExtraNonce2.ToString("x8"), ThisJob.MerkleNumbers);
-            string Target = Utilities.GenerateTarget(65535.0 / CurrentDifficulty);
+            string Target = Utilities.GenerateTarget( 65536.0 / CurrentDifficulty);
 
             // Update the inputs on this job
             ThisJob.Target = Target;
@@ -158,7 +158,7 @@ namespace VeriMiner
         private static void Stratum_GotSetDifficulty(object sender, StratumEventArgs e)
         {
             StratumCommand Command = (StratumCommand)e.MiningEventArg;
-            CurrentDifficulty = Convert.ToSingle(Command.parameters[0]);
+            CurrentDifficulty = Convert.ToDouble(Command.parameters[0]);
 
             Console.WriteLine("Got Set_Difficulty: {0}", CurrentDifficulty);
         }

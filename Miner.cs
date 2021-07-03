@@ -43,7 +43,7 @@ namespace VeriMiner
             // Spin up background threads to do the hashing
             for (int i = 0; i < threads.Length; i++)
             {
-                threads[i] = new Thread(() => doScrypt(databyte, targetbyte, (uint)i, (uint)threads.Length))
+                threads[i] = new Thread(() => DoScrypt(databyte, targetbyte, (uint)i, (uint)threads.Length))
                 {
                     IsBackground = false,
                     Priority = ThreadPriority.Normal//.Lowest; // For debugging
@@ -70,11 +70,12 @@ namespace VeriMiner
         }
 
         // Reference: https://github.com/replicon/Replicon.Cryptography.SCrypt
-        public void doScrypt(byte[] Tempdata, byte[] Target, uint Nonce, uint Increment)
+        public void DoScrypt(byte[] Tempdata, byte[] Target, uint Nonce, uint Increment)
         {
             double Hashcount = 0;
 
             byte[] Databyte = new byte[80];
+
             Array.Copy(Tempdata, 0, Databyte, 0, 76);
 
             Debug.WriteLine("New thread");
@@ -88,16 +89,11 @@ namespace VeriMiner
                 // Loop until done is set or we meet the target
                 while (!done)
                 {
-                    Databyte[76] = (byte)(Nonce >> 0);
-                    Databyte[77] = (byte)(Nonce >> 8);
-                    Databyte[78] = (byte)(Nonce >> 16);
-                    Databyte[79] = (byte)(Nonce >> 24);
-
-                    ScryptResult = CryptSharp.Utility.SCrypt.ComputeDerivedKey(Databyte, Databyte, 32);
+                    ScryptResult = Scrypt_Intrinsic.Hash(Databyte, Nonce);
 
                     Hashcount++;
                     Console.WriteLine("Target: {0} \n Hash: {1}", Utilities.ByteArrayToHexString(Target), Utilities.ByteArrayToHexString(ScryptResult));
-                    if (meetsTarget(ScryptResult, Target))  // Did we meet the target?
+                    if (MeetsTarget(ScryptResult, Target))  // Did we meet the target?
                     {
                         if (!done) 
                             FinalNonce = Nonce; 
@@ -118,7 +114,7 @@ namespace VeriMiner
             Console.WriteLine("Thread finished - {0:0} hashes in {1:0.00} s. Speed: {2:0.00} Hash/s", Hashcount, Elapsedtime, Hashcount / Elapsedtime);
         }
 
-        public bool meetsTarget(byte[] hash, byte[] target)
+        public static bool MeetsTarget(byte[] hash, byte[] target)
         {
             for (int i = hash.Length - 1; i >= 0; i--)
             {

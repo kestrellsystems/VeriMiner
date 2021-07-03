@@ -133,7 +133,7 @@ namespace VeriMiner
             Console.WriteLine("Sent mining.authorize");
         }
 
-        public void SendSUBMIT(string JobID, string nTime, string Nonce, float Difficulty)
+        public void SendSUBMIT(string JobID, string nTime, string Nonce, double Difficulty)
         {
             StratumCommand Command = new()
             {
