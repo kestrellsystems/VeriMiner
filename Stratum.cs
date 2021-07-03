@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json;
 
 namespace VeriMiner
 {
@@ -98,8 +96,6 @@ namespace VeriMiner
                 Console.WriteLine("Socket error:" + ex.Message);
                 ConnectToServer(Server, Port, Username, Password);
             }
-            
-            Console.WriteLine("Sent mining.subscribe");
         }
 
         public void SendAUTHORIZE()
@@ -115,9 +111,7 @@ namespace VeriMiner
                 }
             };
 
-            string request = Utilities.JsonSerialize(Command) + "\n";
-
-            byte[] bytesSent = Encoding.ASCII.GetBytes(request);
+            byte[] bytesSent = Encoding.ASCII.GetBytes(Utilities.JsonSerialize(Command) + "\n");
 
             try
             {
@@ -129,8 +123,6 @@ namespace VeriMiner
                 Console.WriteLine("Socket error:" + ex.Message);
                 ConnectToServer(Server, Port, Username, Password);
             }
-            
-            Console.WriteLine("Sent mining.authorize");
         }
 
         public void SendSUBMIT(string JobID, string nTime, string Nonce, double Difficulty)
@@ -149,9 +141,7 @@ namespace VeriMiner
             }
             };
 
-            string SubmitString = Utilities.JsonSerialize(Command) + "\n";
-
-            byte[] bytesSent = Encoding.ASCII.GetBytes(SubmitString);
+            byte[] bytesSent = Encoding.ASCII.GetBytes(Utilities.JsonSerialize(Command) + "\n");
 
             try
             {
@@ -166,7 +156,6 @@ namespace VeriMiner
 
             SharesSubmitted++;
             Console.WriteLine("{0} - Submit (Difficulty {1})", DateTime.Now, Difficulty);
-            Debug.WriteLine("[{0}] Submit (Difficulty {1}) : {2}", DateTime.Now, Difficulty, SubmitString);
         }
 
         // Callback for Read operation
@@ -191,7 +180,6 @@ namespace VeriMiner
             if (bytesread == 0)
             {
                 Console.WriteLine(DateTime.Now +  " Disconnected. Reconnecting...");
-                Debug.WriteLine(DateTime.Now + " Disconnected. Reconnecting...");
                 tcpClient.Close();
                 tcpClient = null;
                 PendingACKs.Clear();
@@ -201,7 +189,6 @@ namespace VeriMiner
 
             // Get the data
             string data = Encoding.ASCII.GetString(buffer, 0, bytesread);
-            Debug.WriteLine(data);
 
             page += data;
 
@@ -219,7 +206,6 @@ namespace VeriMiner
 
                 if (Command.method != null)             // We got a command
                 {
-                    Debug.WriteLine(DateTime.Now + " Got Command: " + CurrentString);
                     e.MiningEventArg = Command;
 
                     switch (Command.method)
@@ -234,7 +220,6 @@ namespace VeriMiner
                 }
                 else if (Response.error != null || Response.result != null)       // We got a response
                 {
-                    Debug.WriteLine(DateTime.Now + " Got Response: " + CurrentString);
                     e.MiningEventArg = Response;
 
                     // Find the command that this is the response to and remove it from the list of commands that we're waiting on a response to

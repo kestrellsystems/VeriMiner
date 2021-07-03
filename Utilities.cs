@@ -156,7 +156,6 @@ namespace VeriMiner
         /// <returns>deserialized object</returns>        
         public static T JsonDeserialize<T>(string json)
         {
-
             // Load json into memorystream and deserialize            
             MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
