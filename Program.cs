@@ -38,9 +38,6 @@ namespace VeriMiner
             {
                 Console.WriteLine("VeriMiner {0}" , typeof(Program).Assembly.GetName().Version);
 
-                //Print intrinsics support
-                Utilities.DetermineIntrinsicSupport();
-
                 if (!url.HasValue() || !user.HasValue() || !password.HasValue())
                     Console.Error.WriteLine("you are missing a critical option! -> URL: {0} Username: {1} Password: {2}",url.HasValue(),user.HasValue(),password.HasValue());
                 else
@@ -194,7 +191,7 @@ namespace VeriMiner
             }
 
             // Add the new job to the queue
-            Console.WriteLine("Got new Job: {0}", ThisJob.JobID, Console.ForegroundColor = ConsoleColor.Green);
+            Console.WriteLine("Got new Job: {0}", ThisJob.JobID, Console.ForegroundColor = ConsoleColor.DarkMagenta);
             Console.ResetColor();
             IncomingJobs.Enqueue(ThisJob);
         }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Runtime.Intrinsics.X86;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -86,22 +85,18 @@ namespace VeriMiner
 
             SHA256 mySHA256 = SHA256.Create();
             mySHA256.Initialize();
-            byte[] hashValue, hashValue2;
+            byte[] hashValue;
 
             // Create Coinbase hash by DoubleSHA of Coinbase
-            hashValue = mySHA256.ComputeHash(Coinbasebytes);
-            hashValue2 = mySHA256.ComputeHash(hashValue);
+            hashValue = mySHA256.ComputeHash(mySHA256.ComputeHash(Coinbasebytes));
 
             // Calculate Merkle Root by double-hashing the Coinbase hash with each Merkle number in turn
             foreach (string s in MerkleNumbers)
             {
-                hashValue = mySHA256.ComputeHash(HexStringToByteArray(ByteArrayToHexString(hashValue2) + s));
-                hashValue2 = mySHA256.ComputeHash(hashValue);
+                hashValue = mySHA256.ComputeHash(mySHA256.ComputeHash(HexStringToByteArray(ByteArrayToHexString(hashValue) + s)));
             }
             
-            string MerkleRoot = ByteArrayToHexString(ReverseByteArrayByFours(hashValue2));
-
-            return MerkleRoot;
+            return ByteArrayToHexString(ReverseByteArrayByFours(hashValue));
         }
 
         public static string GenerateTarget(double Difficulty)
@@ -169,14 +164,6 @@ namespace VeriMiner
             T result = (T)s.ReadObject(ms);
             ms.Close();
             return result;
-        }
-
-        public static void DetermineIntrinsicSupport()
-        {
-            Console.WriteLine("=== Intrinsic Support ===");
-            Console.WriteLine("AES: {0} AVX: {1} AVX2: {2}", System.Runtime.Intrinsics.X86.Aes.IsSupported, Avx.IsSupported, Avx2.IsSupported);
-            Console.WriteLine("SSE: {0} SSE2: {1} SSE3: {2} SSE41: {3} SSE42: {4} SSSE3: {5} \n", 
-                Sse.IsSupported, Sse2.IsSupported, Sse3.IsSupported, Sse41.IsSupported, Sse42.IsSupported,Ssse3.IsSupported);
         }
     }
 }
