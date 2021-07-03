@@ -28,7 +28,6 @@ namespace VeriMiner
        
         public void Mine(object sender, DoWorkEventArgs e)
         {
-            Debug.WriteLine("New Miner. ID = " + Thread.CurrentThread.ManagedThreadId);
             Console.WriteLine("Starting {0} threads for new block...", threads.Length);
 
             Program.Job ThisJob = (Program.Job)e.Argument;
@@ -65,8 +64,6 @@ namespace VeriMiner
             }
             else
                 e.Result = null;
-
-            Debug.WriteLine("Miner ID {0} finished", Thread.CurrentThread.ManagedThreadId);
         }
 
         // Reference: https://github.com/replicon/Replicon.Cryptography.SCrypt
@@ -77,8 +74,6 @@ namespace VeriMiner
             byte[] Databyte = new byte[80];
 
             Array.Copy(Tempdata, 0, Databyte, 0, 76);
-
-            Debug.WriteLine("New thread");
             
             DateTime StartTime = DateTime.Now;
             
@@ -93,15 +88,20 @@ namespace VeriMiner
 
                     Hashcount++;
                     Console.WriteLine("Target: {0} \n Hash: {1}", Utilities.ByteArrayToHexString(Target), Utilities.ByteArrayToHexString(ScryptResult));
-                    if (MeetsTarget(ScryptResult, Target))  // Did we meet the target?
+
+                    for (int i = ScryptResult.Length - 1; i >= 0; i--) //Did we meet the target?
                     {
-                        if (!done) 
-                            FinalNonce = Nonce; 
-                        done = true; 
-                        break;
+                        if ((ScryptResult[i] & 0xff) > (Target[i] & 0xff))
+                            break;
+                        if ((ScryptResult[i] & 0xff) < (Target[i] & 0xff))
+                        {
+                            FinalNonce = Nonce;
+                            done = true;
+                            break;
+                        }
                     }
-                    else
-                        Nonce += Increment; // If not, increment the nonce and try again
+
+                    Nonce += Increment; // If not, increment the nonce and try again
                 }
             }
             catch (Exception ex)
@@ -112,18 +112,6 @@ namespace VeriMiner
 
             double Elapsedtime = (DateTime.Now - StartTime).TotalSeconds;
             Console.WriteLine("Thread finished - {0:0} hashes in {1:0.00} s. Speed: {2:0.00} Hash/s", Hashcount, Elapsedtime, Hashcount / Elapsedtime);
-        }
-
-        public static bool MeetsTarget(byte[] hash, byte[] target)
-        {
-            for (int i = hash.Length - 1; i >= 0; i--)
-            {
-                if ((hash[i] & 0xff) > (target[i] & 0xff))
-                    return false;
-                if ((hash[i] & 0xff) < (target[i] & 0xff))
-                    return true;
-            }
-            return false;
         }
     }
 

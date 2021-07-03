@@ -4,6 +4,9 @@ using System.Security.Cryptography;
 
 namespace VeriMiner
 {
+    /// <summary>
+    /// adapted from: https://github.com/nyatla/JMiNya/blob/master/core/src/jp/nyatla/minya/hasher/Hasher.java
+    /// </summary>
     public static class Scrypt_Intrinsic
     {
         private static HMACSHA256 hmac;
