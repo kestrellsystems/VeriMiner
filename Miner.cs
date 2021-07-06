@@ -15,7 +15,7 @@ namespace VeriMiner
         public volatile bool done = false;
         public volatile uint FinalNonce = 0;
            
-        Thread[] threads;
+        Task[] MineTasks;
 
         public Miner(int? optThreadCount = null)
         {
@@ -23,38 +23,31 @@ namespace VeriMiner
             if (threadCount > Environment.ProcessorCount) {
                 threadCount = Environment.ProcessorCount;
             }
-            threads = new Thread[threadCount];
+            MineTasks = new Task[threadCount];
         }
        
         public void Mine(object sender, DoWorkEventArgs e)
         {
-            Console.WriteLine("Starting {0} threads for new block...", threads.Length);
+            Console.WriteLine("Starting {0} Tasks for new block...", MineTasks.Length);
 
             Program.Job ThisJob = (Program.Job)e.Argument;
             
             // Gets the data to hash and the target from the work
             byte[] databyte = Utilities.ReverseByteArrayByFours(Utilities.HexStringToByteArray(ThisJob.Data));
-            byte[] targetbyte = Utilities.HexStringToByteArray(ThisJob.Target);
+            byte[] targetbyte = ThisJob.Target;
             
             done = false;
             FinalNonce = 0;
 
             // Spin up background threads to do the hashing
-            for (int i = 0; i < threads.Length; i++)
+            for (int i = 0; i < MineTasks.Length; i++)
             {
-                threads[i] = new Thread(() => DoScrypt(databyte, targetbyte, (uint)i, (uint)threads.Length))
-                {
-                    IsBackground = false,
-                    Priority = ThreadPriority.Normal//.Lowest; // For debugging
-                };
-                threads[i].Start();
+                MineTasks[i] = new(() => DoScrypt(databyte, targetbyte, (uint)i, (uint)MineTasks.Length));
+                MineTasks[i].Start();
             }
 
             // Block until all the threads finish
-            for (int i = 0; i < threads.Length; i++)
-            {
-                threads[i].Join();
-            }
+            Task.WaitAll(MineTasks);
            
             // Fill in the answer if work done
             if (FinalNonce != 0)

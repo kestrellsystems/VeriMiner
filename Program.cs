@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace VeriMiner
 {
@@ -87,15 +88,15 @@ namespace VeriMiner
             // Increment ExtraNonce2
             stratum.ExtraNonce2++;
 
-            // Calculate MerkleRoot and Target
+            // Calculate MerkleRoot
             string MerkleRoot = Utilities.GenerateMerkleRoot(ThisJob.Coinb1, ThisJob.Coinb2, stratum.ExtraNonce1, stratum.ExtraNonce2.ToString("x8"), ThisJob.MerkleNumbers);
-            string Target = Utilities.GenerateTarget( 65536.0 / CurrentDifficulty);
 
             // Update the inputs on this job
-            ThisJob.Target = Target;
+            ThisJob.Target = Utilities.GenerateTarget(65536.0 / CurrentDifficulty); //calculate target
             ThisJob.Data = ThisJob.Version + ThisJob.PreviousHash + MerkleRoot + ThisJob.NetworkTime + ThisJob.NetworkDifficulty;
 
             // Start a new miner in the background and pass it the job
+
             worker = new BackgroundWorker();
             worker.DoWork += new DoWorkEventHandler(miner.Mine);
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(CoinMinerCompleted);
@@ -210,7 +211,7 @@ namespace VeriMiner
             public bool CleanJobs;
 
             // Intermediate
-            public string Target;
+            public byte[] Target;
             public string Data;
 
             // Output
