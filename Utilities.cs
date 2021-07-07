@@ -61,21 +61,6 @@ namespace VeriMiner
 
             return byteArray;
         }
-
-        // For testing:  Coinbase = Coinb1 + Extranonce1 + Extranonce2 + Coinb2
-        //Coinb1 = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2703d72707062f503253482f049a53985208";
-        //Coinb2 = "0d2f7374726174756d506f6f6c2f0000000001923f6f2e010000001976a9145b771921a9b47ee8104da7e4710b5f633d95fa7388ac00000000";
-        //ExtraNonce1 = "f8025672";
-        //ExtraNonce2 = "00000001";
-
-        //MerkleNumbers = new string[5];
-        //MerkleNumbers[0] = "a7f97d9ec804c539b375f2997bc12d32269d105a5281f2403c14fb1833b70f0c";
-        //MerkleNumbers[1] = "04bd5a1f74d2beece0c893d742c51dd9b9f2e08e2686008d258f23461288a2cd";
-        //MerkleNumbers[2] = "303ec9c3092b926f862ee2bd70b629e270e836eba86df9b55f9d795439163b13";
-        //MerkleNumbers[3] = "2d43210a4fb228cf18001b630d0d45ca509b3db8ec3a40586b022546822b0dea";
-        //MerkleNumbers[4] = "caf00c196faef37f97da33e8c6ef3cbc233f172a9a062d72f0dfd3ee17af291c";
-
-        // Should generate a Merkle Root of 3c43e4bf024c2900181bd2f94bd7ebd5d3298f6d47f4f899b952acfd6aa6d94e
         
         public static string GenerateMerkleRoot(string Coinb1, string Coinb2, string ExtraNonce1, string ExtraNonce2, string[] MerkleNumbers)
         {
@@ -123,29 +108,7 @@ namespace VeriMiner
             }
             while (true);
 
-            //Array.Reverse((Array)result);
-
             return result;
-        }
-
-        /// <summary>        
-        /// Serializes an object to a UTF-8 encoded JSON string.        
-        /// </summary>        
-        /// <param name="obj">object to serialize</param>        
-        /// <returns>JSON string result</returns>        
-        public static string JsonSerialize(object obj)
-        {
-            // Serialize to a memory stream....            
-            MemoryStream ms = new MemoryStream();
-
-            // Serialize to memory stream with DataContractJsonSerializer            
-            DataContractJsonSerializer s = new DataContractJsonSerializer(obj.GetType());
-            s.WriteObject(ms, obj);
-            byte[] json = ms.ToArray();
-            ms.Close();
-
-            // Return utf8 encoded json string            
-            return Encoding.UTF8.GetString(json, 0, json.Length);
         }
 
         /// <summary>        
@@ -157,9 +120,9 @@ namespace VeriMiner
         public static T JsonDeserialize<T>(string json)
         {
             // Load json into memorystream and deserialize            
-            MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            MemoryStream ms = new(Encoding.UTF8.GetBytes(json));
 
-            DataContractJsonSerializer s = new DataContractJsonSerializer(typeof(T));
+            DataContractJsonSerializer s = new(typeof(T));
             T result = (T)s.ReadObject(ms);
             ms.Close();
             return result;

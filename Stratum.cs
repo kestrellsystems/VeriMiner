@@ -3,6 +3,8 @@ using System.Collections;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace VeriMiner
 {
@@ -84,7 +86,7 @@ namespace VeriMiner
                 parameters = new ArrayList()
             };
 
-            byte[] bytesSent = Encoding.ASCII.GetBytes(Utilities.JsonSerialize(Command) + "\n");
+            byte[] bytesSent = Encoding.ASCII.GetBytes(JsonSerializer.Serialize(Command) + "\n");
 
             try
             {
@@ -111,7 +113,7 @@ namespace VeriMiner
                 }
             };
 
-            byte[] bytesSent = Encoding.ASCII.GetBytes(Utilities.JsonSerialize(Command) + "\n");
+            byte[] bytesSent = Encoding.ASCII.GetBytes(JsonSerializer.Serialize(Command) + "\n");
 
             try
             {
@@ -141,7 +143,7 @@ namespace VeriMiner
             }
             };
 
-            byte[] bytesSent = Encoding.ASCII.GetBytes(Utilities.JsonSerialize(Command) + "\n");
+            byte[] bytesSent = Encoding.ASCII.GetBytes(JsonSerializer.Serialize(Command) + "\n");
 
             try
             {
@@ -243,22 +245,22 @@ namespace VeriMiner
     [DataContract]
     public class StratumCommand
     {
-        [DataMember]
+        [DataMember][JsonInclude]
         public string method;
-        [DataMember]
+        [DataMember][JsonInclude]
         public int? id;
-        [DataMember(Name = "params")]
+        [DataMember(Name = "params")][JsonInclude][JsonPropertyName("params")]
         public ArrayList parameters;
     }
 
     [DataContract]
     public class StratumResponse
     {
-        [DataMember]
+        [DataMember][JsonInclude]
         public ArrayList error;
-        [DataMember]
+        [DataMember][JsonInclude]
         public int? id;
-        [DataMember]
+        [DataMember][JsonInclude]
         public object result;
     }
 

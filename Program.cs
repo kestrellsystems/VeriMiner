@@ -1,7 +1,6 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +19,6 @@ namespace VeriMiner
 
         private static double CurrentDifficulty;
         private static Queue<Job> IncomingJobs = new();
-        private static BackgroundWorker worker;
         private static int SharesSubmitted = 0;
         private static int SharesAccepted = 0;
 
@@ -77,7 +75,7 @@ namespace VeriMiner
         {
             // Wait for a new job to appear in the queue
             while (IncomingJobs.Count == 0)
-                Thread.Sleep(500);
+                Thread.Sleep(100);
 
             // Get the job
             Job ThisJob = IncomingJobs.Dequeue();
@@ -96,23 +94,16 @@ namespace VeriMiner
             ThisJob.Data = ThisJob.Version + ThisJob.PreviousHash + MerkleRoot + ThisJob.NetworkTime + ThisJob.NetworkDifficulty;
 
             // Start a new miner in the background and pass it the job
-
-            worker = new BackgroundWorker();
-            worker.DoWork += new DoWorkEventHandler(miner.Mine);
-            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(CoinMinerCompleted);
-            worker.RunWorkerAsync(ThisJob);
+            var MinerDone = Task.Run(() => miner.Mine(ThisJob));
+            CoinMinerCompleted(MinerDone.Result);
         }
 
-        private static void CoinMinerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private static void CoinMinerCompleted(Job ThisJob)
         {
             // If the miner returned a result, submit it
-            if (e.Result != null)
-            {
-                Job ThisJob = (Job)e.Result;
-                SharesSubmitted++;
+            SharesSubmitted++;
 
-                stratum.SendSUBMIT(ThisJob.JobID, ThisJob.Data.Substring(68 * 2, 8), ThisJob.Answer.ToString("x8"), CurrentDifficulty);
-            }
+            stratum.SendSUBMIT(ThisJob.JobID, ThisJob.Data.Substring(68 * 2, 8), ThisJob.Answer.ToString("x8"), CurrentDifficulty);
 
             // Mine again
             StartCoinMiner();
@@ -121,8 +112,6 @@ namespace VeriMiner
         private static void Stratum_GotResponse(object sender, StratumEventArgs e)
         {
             StratumResponse Response = (StratumResponse)e.MiningEventArg;
-
-            Console.Write("Got Response to {0} - ", (string)sender);
 
             switch ((string)sender)
             {
@@ -185,7 +174,7 @@ namespace VeriMiner
             // Cancel the existing mining threads and clear the queue if CleanJobs = true
             if (ThisJob.CleanJobs)
             {
-                Console.WriteLine("Stratum detected a new block. Stopping old threads.");
+                Console.WriteLine("Stratum detected a new block. Stopping old Tasks.");
 
                 IncomingJobs.Clear();
                 miner.done = true;

@@ -25,12 +25,10 @@ namespace VeriMiner
             }
             MineTasks = new Task[threadCount];
         }
-       
-        public void Mine(object sender, DoWorkEventArgs e)
-        {
-            Console.WriteLine("Starting {0} Tasks for new block...", MineTasks.Length);
 
-            Program.Job ThisJob = (Program.Job)e.Argument;
+        public Program.Job Mine(Program.Job ThisJob)
+        {
+            Console.WriteLine("Starting {0} Tasks", MineTasks.Length);
             
             // Gets the data to hash and the target from the work
             byte[] databyte = Utilities.ReverseByteArrayByFours(Utilities.HexStringToByteArray(ThisJob.Data));
@@ -53,10 +51,10 @@ namespace VeriMiner
             if (FinalNonce != 0)
             {
                 ThisJob.Answer = FinalNonce;
-                e.Result = ThisJob;
+                return ThisJob;
             }
             else
-                e.Result = null;
+                return null;
         }
 
         // Reference: https://github.com/replicon/Replicon.Cryptography.SCrypt
